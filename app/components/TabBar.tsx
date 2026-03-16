@@ -10,11 +10,11 @@ interface Tab {
 }
 
 const TABS: Tab[] = [
-  { id: "inicio", label: "Inicio", emoji: "🏠" },
-  { id: "youtube", label: "YouTube", emoji: "🎬" },
-  { id: "calendario", label: "Calendario", emoji: "📅" },
-  { id: "agentes", label: "Agentes", emoji: "🤖", avatar: "/avatars/mickey.png" },
-  { id: "proyectos", label: "Proyectos", emoji: "📊" },
+  { id: "inicio", label: "Inicio", emoji: "🏠", avatar: "/avatars/mickey.png" },
+  { id: "youtube", label: "YouTube", emoji: "🎬", avatar: "/avatars/nova.png" },
+  { id: "calendario", label: "Cal", emoji: "📅" },
+  { id: "agentes", label: "Agentes", emoji: "🤖", avatar: "/avatars/cody.png" },
+  { id: "proyectos", label: "Proyectos", emoji: "📊", avatar: "/avatars/rex.png" },
 ];
 
 interface TabBarProps {
