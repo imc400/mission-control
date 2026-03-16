@@ -1,8 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
+import { useState } from "react";
 
 export default function MickeyCard() {
+  const [imgError, setImgError] = useState(false);
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -28,8 +31,21 @@ export default function MickeyCard() {
           >
             <div className="relative">
               <div className="absolute -inset-2 rounded-full bg-violet-500/20 blur-md" />
-              <div className="relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-800 text-5xl sm:text-6xl shadow-lg shadow-violet-500/25">
-                🐭
+              <div className="relative flex h-20 w-20 sm:h-24 sm:w-24 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-800 shadow-lg shadow-violet-500/25 overflow-hidden ring-2 ring-violet-500/50"
+                style={{ boxShadow: "0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(139, 92, 246, 0.2)" }}
+              >
+                {imgError ? (
+                  <span className="text-5xl sm:text-6xl">🐭</span>
+                ) : (
+                  <Image
+                    src="/avatars/mickey.png"
+                    alt="Mickey"
+                    width={96}
+                    height={96}
+                    className="rounded-full object-cover"
+                    onError={() => setImgError(true)}
+                  />
+                )}
               </div>
             </div>
           </motion.div>

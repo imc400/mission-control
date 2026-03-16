@@ -86,6 +86,7 @@ export default function Home() {
                   {agents.filter((a) => a.id !== "mickey").map((agent, i) => (
                     <AgentCard
                       key={agent.id}
+                      id={agent.id}
                       emoji={agent.emoji}
                       name={agent.name}
                       role={agent.role}

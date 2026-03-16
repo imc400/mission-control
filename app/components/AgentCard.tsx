@@ -1,8 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
+import { useState } from "react";
 
 interface AgentCardProps {
+  id: string;
   emoji: string;
   name: string;
   role: string;
@@ -49,6 +52,7 @@ const statusConfig = {
 };
 
 export default function AgentCard({
+  id,
   emoji,
   name,
   role,
@@ -59,6 +63,7 @@ export default function AgentCard({
   onClick,
 }: AgentCardProps) {
   const s = statusConfig[status];
+  const [imgError, setImgError] = useState(false);
 
   return (
     <motion.div
@@ -85,12 +90,27 @@ export default function AgentCard({
           style={{ background: `linear-gradient(90deg, transparent, ${accentColor}, transparent)` }}
         />
 
-        {/* Emoji avatar */}
+        {/* Avatar */}
         <div
-          className="mb-4 flex h-14 w-14 items-center justify-center rounded-lg text-3xl"
-          style={{ background: `${accentColor}15` }}
+          className="mb-4 flex h-16 w-16 items-center justify-center rounded-full overflow-hidden ring-2"
+          style={{
+            background: `${accentColor}15`,
+            boxShadow: `0 0 16px ${accentColor}66, 0 0 32px ${accentColor}33`,
+            ["--tw-ring-color" as string]: `${accentColor}80`,
+          }}
         >
-          {emoji}
+          {imgError ? (
+            <span className="text-3xl">{emoji}</span>
+          ) : (
+            <Image
+              src={`/avatars/${id}.png`}
+              alt={name}
+              width={64}
+              height={64}
+              className="rounded-full object-cover"
+              onError={() => setImgError(true)}
+            />
+          )}
         </div>
 
         {/* Name and role */}
