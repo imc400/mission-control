@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 
 const stats = [
-  { value: "1", label: "Agente Activo", color: "text-emerald-400" },
+  { value: "2", label: "Agentes Activos", color: "text-emerald-400" },
   { value: "3", label: "En construcción", color: "text-amber-400" },
   { value: "∞", label: "Posibilidades", color: "text-violet-400" },
 ];

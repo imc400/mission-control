@@ -10,6 +10,7 @@ interface AgentCardProps {
   accentColor: string;
   glowColor: string;
   delay?: number;
+  onClick?: () => void;
 }
 
 const statusConfig = {
@@ -55,6 +56,7 @@ export default function AgentCard({
   accentColor,
   glowColor,
   delay = 0,
+  onClick,
 }: AgentCardProps) {
   const s = statusConfig[status];
 
@@ -64,7 +66,8 @@ export default function AgentCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay, ease: "easeOut" }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="group relative"
+      onClick={onClick}
+      className={`group relative ${onClick ? "cursor-pointer" : ""}`}
     >
       {/* Hover glow */}
       <div
