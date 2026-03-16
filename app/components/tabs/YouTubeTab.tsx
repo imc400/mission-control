@@ -1,13 +1,14 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAgentFeed, TYPE_COLORS, TYPE_ICON } from "../../hooks/useAgentFeed";
+import { useAgentFeed, TYPE_COLORS } from "../../hooks/useAgentFeed";
 import {
   getScheduledTasks,
   getAgentEvents as fetchAgentEvents,
   type ScheduledTask,
   type AgentEvent,
 } from "../../lib/queries";
+import AgentAvatar from "../AgentAvatar";
 
 const PIPELINE_STEPS = [
   { name: "Tendencias", emoji: "📈" },
@@ -77,23 +78,20 @@ export default function YouTubeTab() {
     (e) => e.agent === "Mickey" || e.agent === "Cody"
   );
 
-  const mickeyStatus =
-    liveChannelEvents.find(
-      (e) =>
-        e.agent === "Mickey" &&
-        Date.now() - e.timestamp.getTime() < 5 * 60 * 1000
-    )
-      ? "ACTIVO"
-      : "EN ESPERA";
+  const mickeyActive = liveChannelEvents.some(
+    (e) =>
+      e.agent === "Mickey" &&
+      Date.now() - e.timestamp.getTime() < 5 * 60 * 1000
+  );
 
-  const codyStatus =
-    liveChannelEvents.find(
-      (e) =>
-        e.agent === "Cody" &&
-        Date.now() - e.timestamp.getTime() < 5 * 60 * 1000
-    )
-      ? "ACTIVO"
-      : "EN ESPERA";
+  const codyActive = liveChannelEvents.some(
+    (e) =>
+      e.agent === "Cody" &&
+      Date.now() - e.timestamp.getTime() < 5 * 60 * 1000
+  );
+
+  const mickeyStatus = mickeyActive ? "ACTIVO" : "EN ESPERA";
+  const codyStatus = codyActive ? "ACTIVO" : "EN ESPERA";
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
@@ -102,14 +100,14 @@ export default function YouTubeTab() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-bold tracking-tight text-[#f8fafc]">
-              Mentes Ocultas 🧠
+              Mentes Ocultas
             </h1>
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className="text-xs text-[#64748b]">3 videos</span>
               <span className="text-[#1e2130]">·</span>
               <span className="text-xs text-[#64748b]">0 suscriptores</span>
               <span className="text-[#1e2130]">·</span>
-              <span className="text-xs text-[#10b981]">En crecimiento 🌱</span>
+              <span className="text-xs text-[#10b981]">En crecimiento</span>
             </div>
           </div>
           <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-[#10b981]/15 text-[#34d399] border border-[#10b981]/20">
@@ -122,7 +120,7 @@ export default function YouTubeTab() {
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg bg-[#ef4444]/10 text-[#ef4444] text-sm font-medium border border-[#ef4444]/20 hover:bg-[#ef4444]/20 transition-colors"
         >
-          ▶️ Abrir canal ↗
+          Abrir canal
         </a>
       </div>
 
@@ -134,7 +132,7 @@ export default function YouTubeTab() {
         <div className="space-y-3">
           <div className="flex items-center justify-between py-2">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🐭</span>
+              <AgentAvatar name="Mickey" size={48} active={mickeyActive} />
               <div>
                 <p className="text-sm font-medium text-[#f8fafc]">Mickey</p>
                 <p className="text-xs text-[#64748b]">Orquestador</p>
@@ -152,7 +150,7 @@ export default function YouTubeTab() {
           </div>
           <div className="flex items-center justify-between py-2 border-t border-[#1e2130]">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">⚙️</span>
+              <AgentAvatar name="Cody" size={48} active={codyActive} />
               <div>
                 <p className="text-sm font-medium text-[#f8fafc]">Cody</p>
                 <p className="text-xs text-[#64748b]">Generación de código</p>
@@ -186,7 +184,7 @@ export default function YouTubeTab() {
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10b981]/15 text-[#34d399]">
                 Publicado
               </span>
-              <span className="text-[10px] text-[#64748b]">🔗 Ver video</span>
+              <span className="text-[10px] text-[#64748b]">Ver video</span>
             </div>
           </div>
         </div>
@@ -260,9 +258,7 @@ export default function YouTubeTab() {
                 key={ev.id}
                 className="flex items-start gap-3 py-2 border-b border-[#1e2130] last:border-0"
               >
-                <span className="text-sm leading-none mt-0.5">
-                  {ev.emoji || TYPE_ICON[ev.event_type] || "📌"}
-                </span>
+                <AgentAvatar name={ev.agent} size={32} active={ev.event_type === "working"} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[#f8fafc] truncate">
                     {ev.message}

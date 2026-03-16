@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAgentFeed, TYPE_COLORS, TYPE_ICON } from "../../hooks/useAgentFeed";
+import { useAgentFeed, TYPE_COLORS } from "../../hooks/useAgentFeed";
 import { getScheduledTasks, type ScheduledTask } from "../../lib/queries";
+import AgentAvatar from "../AgentAvatar";
 
 function getGreeting(): string {
   const hour = new Date(
@@ -99,12 +100,17 @@ export default function InicioTab() {
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
       {/* Daily Summary Card */}
       <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-5">
-        <h1 className="text-xl font-bold tracking-tight text-[#f8fafc]">
-          {getGreeting()}, Nacho 👋
-        </h1>
-        <p className="text-sm text-[#64748b] mt-1 capitalize">
-          {formatDateSpanish()}
-        </p>
+        <div className="flex items-center gap-3">
+          <AgentAvatar name="Mickey" size={48} active />
+          <div>
+            <h1 className="text-xl font-bold tracking-tight text-[#f8fafc]">
+              {getGreeting()}, Nacho
+            </h1>
+            <p className="text-sm text-[#64748b] mt-0.5 capitalize">
+              {formatDateSpanish()}
+            </p>
+          </div>
+        </div>
 
         <div className="flex gap-2 mt-4 flex-wrap">
           <span className="px-3 py-1.5 rounded-full text-xs font-medium bg-[#7c3aed]/15 text-[#a78bfa] border border-[#7c3aed]/20">
@@ -185,9 +191,7 @@ export default function InicioTab() {
                 key={ev.id}
                 className="flex items-start gap-3 py-2 border-b border-[#1e2130] last:border-0"
               >
-                <span className="text-base leading-none mt-0.5">
-                  {ev.emoji || TYPE_ICON[ev.type]}
-                </span>
+                <AgentAvatar name={ev.agent} size={32} active={ev.type === "working"} />
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-[#f8fafc] truncate">{ev.msg}</p>
                   <div className="flex items-center gap-2 mt-0.5">
@@ -216,7 +220,6 @@ export default function InicioTab() {
           Notas rápidas
         </h2>
         <div className="flex items-center gap-2 px-3 py-2.5 rounded-lg bg-[#08090e] border border-[#1e2130] text-sm text-[#64748b]">
-          <span>📝</span>
           <span>Añadir nota...</span>
         </div>
       </div>

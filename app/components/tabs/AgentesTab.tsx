@@ -2,10 +2,10 @@
 
 import { useState } from "react";
 import { useAgentFeed, TYPE_COLORS, TYPE_ICON } from "../../hooks/useAgentFeed";
+import AgentAvatar, { AGENT_AVATARS } from "../AgentAvatar";
 
 interface AgentDef {
   name: string;
-  emoji: string;
   role: string;
   connections?: string[];
   projects?: string[];
@@ -15,31 +15,26 @@ interface AgentDef {
 const AGENTS: AgentDef[] = [
   {
     name: "Mickey",
-    emoji: "🐭",
     role: "Orquestador Principal",
-    connections: ["Telegram ✅", "GitHub ✅", "YouTube ✅", "Vercel ✅", "Supabase ✅"],
+    connections: ["Telegram", "GitHub", "YouTube", "Vercel", "Supabase"],
   },
   {
     name: "Cody",
-    emoji: "⚙️",
     role: "Agente de Código",
     projects: ["mission-control", "mentes-ocultas"],
   },
   {
     name: "Rex",
-    emoji: "🦖",
     role: "Agente de Marketing",
     comingSoon: true,
   },
   {
     name: "Nova",
-    emoji: "⚡",
     role: "Agente de Contenido",
     comingSoon: true,
   },
   {
     name: "Dash",
-    emoji: "🚀",
     role: "Agente de Ventas",
     comingSoon: true,
   },
@@ -75,6 +70,8 @@ export default function AgentesTab() {
         const agentEvents = agent.comingSoon
           ? []
           : getAgentEvents(agent.name).slice(0, 10);
+        const agentColor = AGENT_AVATARS[agent.name]?.color || "#64748b";
+        const isActive = status === "active";
 
         return (
           <div
@@ -82,27 +79,30 @@ export default function AgentesTab() {
             className={`bg-[#0f1117] border rounded-xl overflow-hidden transition-all ${
               agent.comingSoon
                 ? "border-[#1e2130] opacity-50"
-                : agent.name === "Mickey"
-                  ? "border-[#7c3aed]/30"
-                  : "border-[#1e2130]"
+                : `border-[${agentColor}]/30`
             }`}
+            style={
+              !agent.comingSoon
+                ? { borderColor: `${agentColor}30` }
+                : undefined
+            }
           >
             <button
               onClick={() =>
                 !agent.comingSoon &&
                 setExpanded(isExpanded ? null : agent.name)
               }
-              className="w-full p-4 flex items-center gap-4 text-left"
+              className="w-full p-5 flex items-center gap-5 text-left"
               disabled={agent.comingSoon}
             >
-              <span
-                className={`text-3xl ${agent.name === "Mickey" ? "animate-float" : ""}`}
-              >
-                {agent.emoji}
-              </span>
+              <AgentAvatar
+                name={agent.name}
+                size={80}
+                active={isActive}
+              />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="text-base font-bold text-[#f8fafc]">
+                  <span className="text-lg font-bold text-[#f8fafc]">
                     {agent.name}
                   </span>
                   {agent.comingSoon ? (
@@ -112,18 +112,18 @@ export default function AgentesTab() {
                   ) : (
                     <span
                       className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        status === "active"
+                        isActive
                           ? "bg-[#10b981]/15 text-[#34d399]"
                           : "bg-[#f59e0b]/15 text-[#fbbf24]"
                       }`}
                     >
-                      {status === "active" ? "Activo" : "En espera"}
+                      {isActive ? "Activo" : "En espera"}
                     </span>
                   )}
                 </div>
-                <p className="text-xs text-[#64748b] mt-0.5">{agent.role}</p>
+                <p className="text-sm text-[#64748b] mt-0.5">{agent.role}</p>
                 {lastTask && (
-                  <p className="text-xs text-[#a78bfa] mt-1 truncate">
+                  <p className="text-sm text-[#a78bfa] mt-1.5 truncate">
                     {lastTask}
                   </p>
                 )}
@@ -138,7 +138,7 @@ export default function AgentesTab() {
             </button>
 
             {isExpanded && !agent.comingSoon && (
-              <div className="px-4 pb-4 space-y-3 border-t border-[#1e2130]">
+              <div className="px-5 pb-5 space-y-3 border-t border-[#1e2130]">
                 {/* Connections */}
                 {agent.connections && (
                   <div className="pt-3">
@@ -189,9 +189,7 @@ export default function AgentesTab() {
                           key={ev.id}
                           className="flex items-start gap-2 py-1.5"
                         >
-                          <span className="text-xs leading-none mt-0.5">
-                            {ev.emoji || TYPE_ICON[ev.type]}
-                          </span>
+                          <AgentAvatar name={ev.agent} size={20} />
                           <div className="flex-1 min-w-0">
                             <p className="text-xs text-[#f8fafc] truncate">
                               {ev.msg}

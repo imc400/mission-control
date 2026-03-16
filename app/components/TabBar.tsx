@@ -1,16 +1,19 @@
 "use client";
 
+import Image from "next/image";
+
 interface Tab {
   id: string;
   label: string;
   emoji: string;
+  avatar?: string;
 }
 
 const TABS: Tab[] = [
   { id: "inicio", label: "Inicio", emoji: "🏠" },
   { id: "youtube", label: "YouTube", emoji: "🎬" },
   { id: "calendario", label: "Calendario", emoji: "📅" },
-  { id: "agentes", label: "Agentes", emoji: "🤖" },
+  { id: "agentes", label: "Agentes", emoji: "🤖", avatar: "/avatars/mickey.png" },
   { id: "proyectos", label: "Proyectos", emoji: "📊" },
 ];
 
@@ -36,7 +39,20 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
                   : "text-[#64748b]"
               }`}
             >
-              <span className="text-lg leading-none">{tab.emoji}</span>
+              {tab.avatar ? (
+                <div
+                  className="rounded-full overflow-hidden"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    border: activeTab === tab.id ? "2px solid #7c3aed80" : "2px solid #1e2130",
+                  }}
+                >
+                  <Image src={tab.avatar} alt={tab.label} width={28} height={28} className="rounded-full object-cover" />
+                </div>
+              ) : (
+                <span className="text-lg leading-none">{tab.emoji}</span>
+              )}
               <span className={`text-[10px] font-medium ${
                 activeTab === tab.id ? "text-[#7c3aed]" : ""
               }`}>
@@ -53,7 +69,9 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
       {/* Desktop top tab bar */}
       <nav className="hidden md:flex items-center gap-1 px-6 py-3 bg-[#0f1117]/80 backdrop-blur-xl border-b border-[#1e2130] sticky top-0 z-50">
         <div className="flex items-center gap-2 mr-auto">
-          <span className="text-lg">🎯</span>
+          <div className="rounded-full overflow-hidden" style={{ width: 28, height: 28, border: "2px solid #7c3aed60" }}>
+            <Image src="/avatars/mickey.png" alt="Mission Control" width={28} height={28} className="rounded-full object-cover" />
+          </div>
           <span className="text-sm font-bold tracking-tight text-[#f8fafc]">MISSION CONTROL</span>
         </div>
         <div className="flex items-center gap-1">
@@ -67,7 +85,20 @@ export default function TabBar({ activeTab, onTabChange }: TabBarProps) {
                   : "text-[#64748b] hover:text-[#f8fafc] hover:bg-[#1e2130]/50"
               }`}
             >
-              <span>{tab.emoji}</span>
+              {tab.avatar ? (
+                <div
+                  className="rounded-full overflow-hidden"
+                  style={{
+                    width: 22,
+                    height: 22,
+                    border: activeTab === tab.id ? "1.5px solid #7c3aed80" : "1.5px solid #1e2130",
+                  }}
+                >
+                  <Image src={tab.avatar} alt={tab.label} width={22} height={22} className="rounded-full object-cover" />
+                </div>
+              ) : (
+                <span>{tab.emoji}</span>
+              )}
               <span>{tab.label}</span>
             </button>
           ))}
