@@ -2,91 +2,69 @@
 
 @theme inline {
   --font-sans: var(--font-inter);
-  --color-background: #0a0a0f;
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", ui-monospace, monospace;
+  --color-background: #050508;
   --color-foreground: #e4e4e7;
-  --color-violet-glow: #8b5cf6;
-  --color-card-bg: #12121a;
-  --color-card-border: #1e1e2e;
 }
 
 body {
-  background: #0a0a0f;
+  background: #050508;
   color: #e4e4e7;
   font-family: var(--font-sans), system-ui, sans-serif;
 }
 
-/* Custom glow animations */
+/* ── Scrollbar ── */
+.feed-scroll::-webkit-scrollbar { width: 3px; }
+.feed-scroll::-webkit-scrollbar-track { background: transparent; }
+.feed-scroll::-webkit-scrollbar-thumb { background: #141822; border-radius: 999px; }
+.feed-scroll::-webkit-scrollbar-thumb:hover { background: #1e2433; }
+
+/* ── Animations ── */
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.6; }
   50% { opacity: 1; }
 }
-
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-4px); }
 }
-
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+@keyframes slide-in-top {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+@keyframes border-glow-blue {
+  0%, 100% { border-color: rgba(0, 212, 255, 0.08); }
+  50% { border-color: rgba(0, 212, 255, 0.25); }
+}
+@keyframes border-glow-green {
+  0%, 100% { border-color: rgba(0, 255, 136, 0.08); }
+  50% { border-color: rgba(0, 255, 136, 0.2); }
+}
 @keyframes count-up {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
-
-@keyframes slide-in-right {
-  from { opacity: 0; transform: translateX(16px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes progress-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
 @keyframes scan-line {
-  0% { transform: translateY(-100%); }
-  100% { transform: translateY(100%); }
+  0% { top: -10%; }
+  100% { top: 110%; }
 }
 
-.animate-pulse-glow {
-  animation: pulse-glow 2s ease-in-out infinite;
-}
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-float { animation: float 3s ease-in-out infinite; }
+.animate-slide-in-top { animation: slide-in-top 0.3s ease-out; }
+.animate-live-pulse { animation: live-pulse 1.5s ease-in-out infinite; }
+.animate-border-glow-blue { animation: border-glow-blue 3s ease-in-out infinite; }
+.animate-border-glow-green { animation: border-glow-green 3s ease-in-out infinite; }
+.animate-count-up { animation: count-up 0.4s ease-out; }
 
-.animate-float {
-  animation: float 3s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background-size: 200% 100%;
-  animation: shimmer 3s linear infinite;
-}
-
-.animate-count-up {
-  animation: count-up 0.6s ease-out forwards;
-}
-
-.animate-slide-in {
-  animation: slide-in-right 0.4s ease-out forwards;
-}
-
-.animate-progress-pulse {
-  animation: progress-pulse 2s ease-in-out infinite;
-}
-
-/* Scrollbar styling for feed */
-.feed-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-.feed-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.feed-scroll::-webkit-scrollbar-thumb {
-  background: #1e1e2e;
-  border-radius: 2px;
-}
-.feed-scroll::-webkit-scrollbar-thumb:hover {
-  background: #2e2e3e;
+/* ── Grid Background ── */
+.jarvis-grid {
+  background-image:
+    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
 }

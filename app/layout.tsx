@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -7,9 +7,14 @@ const inter = Inter({
   subsets: ["latin"],
 });
 
+const jetbrains = JetBrains_Mono({
+  variable: "--font-jetbrains",
+  subsets: ["latin"],
+});
+
 export const metadata: Metadata = {
-  title: "Mission Control | Nacho's AI Dashboard",
-  description: "Centro de comando para agentes inteligentes",
+  title: "MISSION CONTROL | JARVIS",
+  description: "Centro de comando — Agentes inteligentes en tiempo real",
 };
 
 export default function RootLayout({
@@ -19,7 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} ${jetbrains.variable} font-sans antialiased`}>
         {children}
       </body>
     </html>
