@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Bot, CheckCircle, Film, Zap, ExternalLink, Github, MessageCircle, Calendar, Clock, ChevronRight } from "lucide-react";
 import { agents, type Agent } from "../data/agents";
 import { useAgentFeed, TYPE_BORDER, TYPE_ICON, type FeedEvent } from "../hooks/useAgentFeed";
+import { supabase } from "../lib/supabase";
 import type { NavPage } from "./Sidebar";
 import Image from "next/image";
 import { useState, useEffect } from "react";
@@ -28,35 +29,105 @@ function AnimatedCounter({ target, duration = 2000 }: { target: number; duration
   return <>{count}</>;
 }
 
-/* ── Live Stats Bar ── */
-const liveStats = [
-  { label: "Agentes Activos", value: 2, icon: Bot, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
-  { label: "Tareas Completadas Hoy", value: 47, icon: CheckCircle, color: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
-  { label: "Videos Publicados", value: 3, icon: Film, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
-  { label: "Sistema Operativo", value: 99.9, icon: Zap, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", suffix: "%" },
-];
+/* ── Hooks for Supabase data ── */
+function useScheduledTasks() {
+  const [tasks, setTasks] = useState<Array<{
+    id: string; name: string; description: string | null;
+    schedule: string | null; next_run: string | null;
+    status: "active" | "pending" | "building" | "disabled";
+    project: string | null;
+  }>>([]);
 
-/* ── Scheduled Tasks ── */
-const scheduledTasks = [
-  { name: "Mentes Ocultas Daily Pipeline", schedule: "Todos los días 10:00 AM", next: "Mañana 10:00 AM", status: "active" as const, icon: "✅" },
-  { name: "Reporte semanal YouTube", schedule: "Lunes 9:00 AM", next: "Lunes 9:00 AM", status: "active" as const, icon: "🔄" },
-  { name: "Agente de prospección", schedule: "Por configurar", next: "—", status: "pending" as const, icon: "⏳" },
-  { name: "Pipeline multi-idioma", schedule: "Por configurar", next: "—", status: "pending" as const, icon: "⏳" },
-];
+  useEffect(() => {
+    async function fetch() {
+      const { data } = await supabase
+        .from("scheduled_tasks")
+        .select("*")
+        .order("status", { ascending: true });
+      if (data) setTasks(data);
+    }
+    fetch();
+  }, []);
 
+  return tasks;
+}
+
+function useProjects() {
+  const [projects, setProjects] = useState<Array<{
+    id: string; name: string; emoji: string | null;
+    description: string | null; status: string;
+    url: string | null; repo: string | null;
+    stats: Record<string, unknown>;
+  }>>([]);
+
+  useEffect(() => {
+    async function fetch() {
+      const { data } = await supabase
+        .from("projects")
+        .select("*")
+        .order("status", { ascending: true });
+      if (data) setProjects(data);
+    }
+    fetch();
+  }, []);
+
+  return projects;
+}
+
+function useLiveStats() {
+  const [completedToday, setCompletedToday] = useState(0);
+  const [totalEvents, setTotalEvents] = useState(0);
+
+  useEffect(() => {
+    async function fetch() {
+      const todayStart = new Date();
+      todayStart.setHours(0, 0, 0, 0);
+
+      const { count: todayCount } = await supabase
+        .from("agent_events")
+        .select("*", { count: "exact", head: true })
+        .eq("event_type", "completed")
+        .gte("created_at", todayStart.toISOString());
+
+      const { count: total } = await supabase
+        .from("agent_events")
+        .select("*", { count: "exact", head: true });
+
+      setCompletedToday(todayCount ?? 0);
+      setTotalEvents(total ?? 0);
+    }
+    fetch();
+  }, []);
+
+  return { completedToday, totalEvents };
+}
+
+/* ── Task status helpers ── */
 const taskStatusBadge = {
   active: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
   pending: "bg-zinc-500/10 text-zinc-500 border-zinc-500/20",
   building: "bg-amber-500/10 text-amber-400 border-amber-500/20",
+  disabled: "bg-red-500/10 text-red-500 border-red-500/20",
 };
-const taskStatusLabel = { active: "Activo", pending: "Pendiente", building: "Construyendo" };
+const taskStatusLabel: Record<string, string> = {
+  active: "Activo",
+  pending: "Pendiente",
+  building: "Construyendo",
+  disabled: "Desactivado",
+};
+const taskStatusIcon: Record<string, string> = {
+  active: "✅",
+  pending: "⏳",
+  building: "🔨",
+  disabled: "⛔",
+};
 
-/* ── Projects ── */
-const projects = [
-  { name: "Mentes Ocultas", icon: "🧠", desc: "Canal YouTube psicología", stats: "3 videos publicados · 0 suscriptores (en crecimiento)", status: "ACTIVO", statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-  { name: "Mission Control", icon: "🎯", desc: "Dashboard central", stats: "Deployed en Vercel", status: "ACTIVO", statusColor: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
-  { name: "Agencia Marketing", icon: "📊", desc: "Pipeline de contenido para clientes", stats: "En planificación", status: "EN CONSTRUCCIÓN", statusColor: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
-];
+/* ── Project status helpers ── */
+const projectStatusMap: Record<string, { label: string; color: string }> = {
+  active: { label: "ACTIVO", color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20" },
+  building: { label: "EN CONSTRUCCIÓN", color: "text-amber-400 bg-amber-500/10 border-amber-500/20" },
+  planned: { label: "PLANIFICADO", color: "text-blue-400 bg-blue-500/10 border-blue-500/20" },
+};
 
 /* ── Main Component ── */
 interface DashboardHomeProps {
@@ -66,8 +137,18 @@ interface DashboardHomeProps {
 
 export default function DashboardHome({ onNavigate, onSelectAgent }: DashboardHomeProps) {
   const { events } = useAgentFeed(4000, 30);
+  const scheduledTasks = useScheduledTasks();
+  const projects = useProjects();
+  const { completedToday, totalEvents } = useLiveStats();
   const [imgError, setImgError] = useState(false);
   const mickey = agents.find((a) => a.id === "mickey")!;
+
+  const liveStats = [
+    { label: "Agentes Activos", value: 2, icon: Bot, color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20" },
+    { label: "Tareas Completadas Hoy", value: completedToday, icon: CheckCircle, color: "text-violet-400", bg: "bg-violet-500/10", border: "border-violet-500/20" },
+    { label: "Eventos Totales", value: totalEvents, icon: Film, color: "text-blue-400", bg: "bg-blue-500/10", border: "border-blue-500/20" },
+    { label: "Sistema Operativo", value: 99.9, icon: Zap, color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", suffix: "%" },
+  ];
 
   return (
     <div className="space-y-6">
@@ -139,7 +220,7 @@ export default function DashboardHome({ onNavigate, onSelectAgent }: DashboardHo
             {/* Label */}
             <div className="hidden sm:flex flex-col items-end gap-1">
               <span className="text-[10px] font-mono uppercase tracking-widest text-violet-500/60">Main Agent</span>
-              <span className="text-[10px] font-mono text-zinc-600">v2.0</span>
+              <span className="text-[10px] font-mono text-zinc-600">v3.0</span>
             </div>
           </div>
         </div>
@@ -193,11 +274,17 @@ export default function DashboardHome({ onNavigate, onSelectAgent }: DashboardHo
             <span className="text-[10px] font-mono text-zinc-600">{events.length} eventos</span>
           </div>
           <div className="max-h-[360px] overflow-y-auto feed-scroll">
-            <AnimatePresence initial={false}>
-              {events.map((event, i) => (
-                <EventRow key={event.id} event={event} isNew={i === 0} />
-              ))}
-            </AnimatePresence>
+            {events.length === 0 ? (
+              <div className="px-4 py-8 text-center text-zinc-600 text-sm">
+                Conectando con Supabase...
+              </div>
+            ) : (
+              <AnimatePresence initial={false}>
+                {events.map((event, i) => (
+                  <EventRow key={event.id} event={event} isNew={i === 0} />
+                ))}
+              </AnimatePresence>
+            )}
           </div>
         </motion.div>
 
@@ -213,29 +300,39 @@ export default function DashboardHome({ onNavigate, onSelectAgent }: DashboardHo
             <h3 className="text-sm font-semibold text-white">Tareas Programadas</h3>
           </div>
           <div className="divide-y divide-[#1e1e2e]">
-            {scheduledTasks.map((task, i) => (
-              <motion.div
-                key={task.name}
-                initial={{ opacity: 0, x: 12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.3, delay: 0.5 + i * 0.06 }}
-                className="px-4 py-3 hover:bg-white/[0.02] transition-colors"
-              >
-                <div className="flex items-start gap-2.5">
-                  <span className="text-sm mt-0.5">{task.icon}</span>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm text-zinc-300 font-medium truncate">{task.name}</p>
-                    <p className="text-[11px] text-zinc-600 mt-0.5">{task.schedule}</p>
-                    {task.next !== "—" && (
-                      <p className="text-[10px] text-zinc-700 mt-0.5">Próxima: {task.next}</p>
-                    )}
+            {scheduledTasks.length === 0 ? (
+              <div className="px-4 py-6 text-center text-zinc-600 text-sm">Cargando tareas...</div>
+            ) : (
+              scheduledTasks.map((task, i) => (
+                <motion.div
+                  key={task.id}
+                  initial={{ opacity: 0, x: 12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.3, delay: 0.5 + i * 0.06 }}
+                  className="px-4 py-3 hover:bg-white/[0.02] transition-colors"
+                >
+                  <div className="flex items-start gap-2.5">
+                    <span className="text-sm mt-0.5">{taskStatusIcon[task.status] || "📋"}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-zinc-300 font-medium truncate">{task.name}</p>
+                      <p className="text-[11px] text-zinc-600 mt-0.5">
+                        {task.schedule || "Por configurar"}
+                      </p>
+                      {task.next_run && (
+                        <p className="text-[10px] text-zinc-700 mt-0.5">
+                          Próxima: {new Date(task.next_run).toLocaleString("es-CL", {
+                            weekday: "short", hour: "2-digit", minute: "2-digit",
+                          })}
+                        </p>
+                      )}
+                    </div>
+                    <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium border ${taskStatusBadge[task.status] || taskStatusBadge.pending}`}>
+                      {taskStatusLabel[task.status] || task.status}
+                    </span>
                   </div>
-                  <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium border ${taskStatusBadge[task.status]}`}>
-                    {taskStatusLabel[task.status]}
-                  </span>
-                </div>
-              </motion.div>
-            ))}
+                </motion.div>
+              ))
+            )}
           </div>
         </motion.div>
       </div>
@@ -248,25 +345,35 @@ export default function DashboardHome({ onNavigate, onSelectAgent }: DashboardHo
       >
         <h2 className="text-lg font-semibold text-white mb-3">Proyectos Activos</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {projects.map((project, i) => (
-            <motion.div
-              key={project.name}
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, delay: 0.55 + i * 0.08 }}
-              className="rounded-xl border border-[#1e1e2e] bg-[#12121a] p-4 hover:border-[#2e2e3e] transition-colors group"
-            >
-              <div className="flex items-center gap-2.5 mb-2">
-                <span className="text-lg">{project.icon}</span>
-                <h3 className="text-sm font-semibold text-white">{project.name}</h3>
-              </div>
-              <p className="text-[12px] text-zinc-500 mb-2">{project.desc}</p>
-              <p className="text-[11px] text-zinc-600 mb-3">{project.stats}</p>
-              <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide border ${project.statusColor}`}>
-                {project.status}
-              </span>
-            </motion.div>
-          ))}
+          {projects.length === 0 ? (
+            <div className="col-span-full text-center text-zinc-600 text-sm py-6">Cargando proyectos...</div>
+          ) : (
+            projects.map((project, i) => {
+              const statusInfo = projectStatusMap[project.status] || projectStatusMap.active;
+              const statsStr = project.stats
+                ? Object.entries(project.stats).map(([k, v]) => `${k}: ${v}`).join(" · ")
+                : "";
+              return (
+                <motion.div
+                  key={project.id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.3, delay: 0.55 + i * 0.08 }}
+                  className="rounded-xl border border-[#1e1e2e] bg-[#12121a] p-4 hover:border-[#2e2e3e] transition-colors group"
+                >
+                  <div className="flex items-center gap-2.5 mb-2">
+                    <span className="text-lg">{project.emoji || "📁"}</span>
+                    <h3 className="text-sm font-semibold text-white">{project.name}</h3>
+                  </div>
+                  <p className="text-[12px] text-zinc-500 mb-2">{project.description}</p>
+                  {statsStr && <p className="text-[11px] text-zinc-600 mb-3">{statsStr}</p>}
+                  <span className={`inline-flex rounded-full px-2.5 py-0.5 text-[10px] font-bold tracking-wide border ${statusInfo.color}`}>
+                    {statusInfo.label}
+                  </span>
+                </motion.div>
+              );
+            })
+          )}
         </div>
       </motion.div>
 

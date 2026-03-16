@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { supabase } from "../lib/supabase";
 
 export interface FeedEvent {
   id: string;
@@ -10,27 +11,6 @@ export interface FeedEvent {
   type: "working" | "completed" | "error" | "idle";
   msg: string;
 }
-
-const MOCK_EVENTS: Omit<FeedEvent, "id" | "timestamp">[] = [
-  { agent: "Mickey", emoji: "🐭", type: "completed", msg: "Pipeline Mentes Ocultas ejecutado — video subido a YouTube" },
-  { agent: "Cody", emoji: "⚙️", type: "working", msg: "Compilando nuevo componente React..." },
-  { agent: "Mickey", emoji: "🐭", type: "working", msg: "Generando guión para mañana — tema: sesgos cognitivos" },
-  { agent: "Mickey", emoji: "🐭", type: "completed", msg: "Tendencias analizadas: 5 temas identificados" },
-  { agent: "Cody", emoji: "⚙️", type: "completed", msg: "Deploy exitoso en Vercel — mission-control-jade-six.vercel.app" },
-  { agent: "Mickey", emoji: "🐭", type: "working", msg: "Descargando métricas de YouTube Analytics..." },
-  { agent: "Cody", emoji: "⚙️", type: "completed", msg: "Tests pasados: 52/52 — cobertura 96%" },
-  { agent: "Mickey", emoji: "🐭", type: "completed", msg: "Thumbnail generado con IA para próximo video" },
-  { agent: "Cody", emoji: "⚙️", type: "working", msg: "Optimizando bundle — tree-shaking en progreso" },
-  { agent: "Mickey", emoji: "🐭", type: "completed", msg: "Reporte semanal generado — engagement +12%" },
-  { agent: "Cody", emoji: "⚙️", type: "completed", msg: "PR #47 mergeado — real-time dashboard" },
-  { agent: "Mickey", emoji: "🐭", type: "working", msg: "Analizando comentarios del último video..." },
-  { agent: "Cody", emoji: "⚙️", type: "error", msg: "Build warning: unused import en utils.ts — auto-fix aplicado" },
-  { agent: "Mickey", emoji: "🐭", type: "completed", msg: "SEO optimizado: títulos y descripciones actualizados" },
-  { agent: "Cody", emoji: "⚙️", type: "working", msg: "Ejecutando lighthouse audit..." },
-  { agent: "Mickey", emoji: "🐭", type: "completed", msg: "Script de video revisado — duración estimada: 8:42" },
-  { agent: "Mickey", emoji: "🐭", type: "working", msg: "Conectando con API de Telegram para notificaciones" },
-  { agent: "Cody", emoji: "⚙️", type: "completed", msg: "Migración de DB completada — 0 errores" },
-];
 
 const TYPE_COLORS = {
   working: "text-amber-400",
@@ -55,36 +35,53 @@ const TYPE_ICON = {
 
 export { TYPE_COLORS, TYPE_BORDER, TYPE_ICON };
 
-export function useAgentFeed(intervalMs = 4000, maxEvents = 30) {
-  const [events, setEvents] = useState<FeedEvent[]>(() => {
-    // Seed with 5 initial events
-    const now = Date.now();
-    return MOCK_EVENTS.slice(0, 5).map((e, i) => ({
-      ...e,
-      id: `seed-${i}`,
-      timestamp: new Date(now - (5 - i) * 60000),
-    }));
-  });
+function toFeedEvent(row: Record<string, unknown>): FeedEvent {
+  return {
+    id: String(row.id),
+    timestamp: new Date(row.created_at as string),
+    agent: row.agent as string,
+    emoji: (row.emoji as string) || "",
+    type: (row.event_type as FeedEvent["type"]) || "idle",
+    msg: row.message as string,
+  };
+}
 
-  const [eventIndex, setEventIndex] = useState(5);
+export function useAgentFeed(_intervalMs = 4000, maxEvents = 30) {
+  const [events, setEvents] = useState<FeedEvent[]>([]);
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setEventIndex((prev) => {
-        const idx = prev % MOCK_EVENTS.length;
-        const template = MOCK_EVENTS[idx];
-        const newEvent: FeedEvent = {
-          ...template,
-          id: `live-${Date.now()}`,
-          timestamp: new Date(),
-        };
-        setEvents((curr) => [newEvent, ...curr].slice(0, maxEvents));
-        return prev + 1;
-      });
-    }, intervalMs);
+    // Initial load: last N events
+    async function fetchInitial() {
+      const { data } = await supabase
+        .from("agent_events")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(maxEvents);
 
-    return () => clearInterval(timer);
-  }, [intervalMs, maxEvents]);
+      if (data) {
+        setEvents(data.map(toFeedEvent));
+      }
+    }
+
+    fetchInitial();
+
+    // Realtime subscription
+    const channel = supabase
+      .channel("agent-events-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "agent_events" },
+        (payload) => {
+          const newEvent = toFeedEvent(payload.new);
+          setEvents((prev) => [newEvent, ...prev].slice(0, maxEvents));
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [maxEvents]);
 
   const getAgentEvents = useCallback(
     (agentName: string) => events.filter((e) => e.agent === agentName),
