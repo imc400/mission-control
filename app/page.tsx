@@ -55,7 +55,7 @@ export default function Home() {
       <main className="relative flex-1 min-w-0 px-4 sm:px-8 lg:px-12 py-8 sm:py-12">
         <div className="mx-auto max-w-5xl">
           {activePage === "inicio" && (
-            <DashboardHome onNavigate={setActivePage} />
+            <DashboardHome onNavigate={setActivePage} onSelectAgent={setSelectedAgent} />
           )}
 
           {activePage === "agentes" && (
