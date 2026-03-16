@@ -24,6 +24,11 @@ const AGENTS: AgentDef[] = [
     projects: ["mission-control", "mentes-ocultas"],
   },
   {
+    name: "Josefina",
+    role: "Agente de Diseño UX/UI",
+    projects: ["mission-control", "mentes-ocultas", "agencia-marketing"],
+  },
+  {
     name: "Rex",
     role: "Agente de Marketing",
     comingSoon: true,
