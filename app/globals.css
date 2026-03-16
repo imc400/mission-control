@@ -1,0 +1,35 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-inter);
+  --color-background: #0a0a0f;
+  --color-foreground: #e4e4e7;
+  --color-violet-glow: #8b5cf6;
+  --color-card-bg: #12121a;
+  --color-card-border: #1e1e2e;
+}
+
+body {
+  background: #0a0a0f;
+  color: #e4e4e7;
+  font-family: var(--font-sans), system-ui, sans-serif;
+}
+
+/* Custom glow animations */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-4px); }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
