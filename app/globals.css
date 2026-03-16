@@ -3,68 +3,37 @@
 @theme inline {
   --font-sans: var(--font-inter);
   --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", ui-monospace, monospace;
-  --color-background: #050508;
-  --color-foreground: #e4e4e7;
+  --color-background: #08090e;
+  --color-foreground: #f8fafc;
 }
 
 body {
-  background: #050508;
-  color: #e4e4e7;
+  background: #08090e;
+  color: #f8fafc;
   font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 /* ── Scrollbar ── */
 .feed-scroll::-webkit-scrollbar { width: 3px; }
 .feed-scroll::-webkit-scrollbar-track { background: transparent; }
-.feed-scroll::-webkit-scrollbar-thumb { background: #141822; border-radius: 999px; }
-.feed-scroll::-webkit-scrollbar-thumb:hover { background: #1e2433; }
+.feed-scroll::-webkit-scrollbar-thumb { background: #1e2130; border-radius: 999px; }
+.feed-scroll::-webkit-scrollbar-thumb:hover { background: #2e3344; }
 
 /* ── Animations ── */
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.6; }
-  50% { opacity: 1; }
-}
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
   50% { transform: translateY(-4px); }
-}
-@keyframes slide-in-top {
-  from { opacity: 0; transform: translateY(-12px); }
-  to { opacity: 1; transform: translateY(0); }
 }
 @keyframes live-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.8); }
 }
-@keyframes border-glow-blue {
-  0%, 100% { border-color: rgba(0, 212, 255, 0.08); }
-  50% { border-color: rgba(0, 212, 255, 0.25); }
-}
-@keyframes border-glow-green {
-  0%, 100% { border-color: rgba(0, 255, 136, 0.08); }
-  50% { border-color: rgba(0, 255, 136, 0.2); }
-}
-@keyframes count-up {
-  from { opacity: 0; transform: translateY(8px); }
+@keyframes slide-in-top {
+  from { opacity: 0; transform: translateY(-12px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes scan-line {
-  0% { top: -10%; }
-  100% { top: 110%; }
-}
 
-.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
 .animate-float { animation: float 3s ease-in-out infinite; }
-.animate-slide-in-top { animation: slide-in-top 0.3s ease-out; }
 .animate-live-pulse { animation: live-pulse 1.5s ease-in-out infinite; }
-.animate-border-glow-blue { animation: border-glow-blue 3s ease-in-out infinite; }
-.animate-border-glow-green { animation: border-glow-green 3s ease-in-out infinite; }
-.animate-count-up { animation: count-up 0.4s ease-out; }
-
-/* ── Grid Background ── */
-.jarvis-grid {
-  background-image:
-    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-}
+.animate-slide-in-top { animation: slide-in-top 0.3s ease-out; }
