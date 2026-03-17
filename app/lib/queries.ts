@@ -76,6 +76,44 @@ export async function getAgentEvents(
   return (data as AgentEvent[]) || [];
 }
 
+export interface YouTubeChannelStats {
+  subscribers: number;
+  total_views: number;
+  video_count: number;
+  channel_name: string;
+}
+
+export interface YouTubeVideoStats {
+  video_id: string;
+  title: string;
+  published_at: string;
+  views: number;
+  likes: number;
+  comments: number;
+  thumbnail_url: string;
+  url: string;
+}
+
+export interface YouTubeStats {
+  channel: YouTubeChannelStats;
+  videos: YouTubeVideoStats[];
+}
+
+export async function getYouTubeStats(): Promise<{ stats: YouTubeStats; updated_at: string } | null> {
+  const { data, error } = await supabase
+    .from("projects")
+    .select("stats, updated_at")
+    .eq("id", "mentes-ocultas")
+    .single();
+
+  if (error) {
+    console.error("Error fetching YouTube stats:", error);
+    return null;
+  }
+  if (!data?.stats) return null;
+  return { stats: data.stats as YouTubeStats, updated_at: data.updated_at as string };
+}
+
 export function getAgentStatus(
   events: AgentEvent[],
   agentName: string

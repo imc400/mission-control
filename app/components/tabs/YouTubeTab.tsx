@@ -5,8 +5,10 @@ import { useAgentFeed, TYPE_COLORS } from "../../hooks/useAgentFeed";
 import {
   getScheduledTasks,
   getAgentEvents as fetchAgentEvents,
+  getYouTubeStats,
   type ScheduledTask,
   type AgentEvent,
+  type YouTubeStats,
 } from "../../lib/queries";
 import AgentAvatar from "../AgentAvatar";
 
@@ -82,15 +84,23 @@ export default function YouTubeTab() {
   const { events } = useAgentFeed(4000, 50);
   const [pipelineTask, setPipelineTask] = useState<ScheduledTask | null>(null);
   const [channelEvents, setChannelEvents] = useState<AgentEvent[]>([]);
+  const [ytStats, setYtStats] = useState<YouTubeStats | null>(null);
+  const [statsUpdatedAt, setStatsUpdatedAt] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function load() {
-      const [tasks, mickeyEvts, codyEvts] = await Promise.all([
+      const [tasks, mickeyEvts, codyEvts, ytData] = await Promise.all([
         getScheduledTasks(),
         fetchAgentEvents("Mickey", 10),
         fetchAgentEvents("Cody", 10),
+        getYouTubeStats(),
       ]);
+
+      if (ytData) {
+        setYtStats(ytData.stats);
+        setStatsUpdatedAt(ytData.updated_at);
+      }
 
       const mentesTask = tasks.find(
         (t) =>
@@ -143,17 +153,26 @@ export default function YouTubeTab() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-lg md:text-xl font-bold tracking-tight text-[#f8fafc]">
-              Mentes Ocultas
+              {ytStats?.channel?.channel_name || "Mentes Ocultas"}
             </h1>
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className="text-xs text-[#64748b]">3 videos</span>
+              <span className="text-xs text-[#64748b]">
+                {ytStats?.channel?.video_count ?? "–"} videos
+              </span>
               <span className="text-[#1e2130]">·</span>
-              <span className="text-xs text-[#64748b]">0 suscriptores</span>
+              <span className="text-xs text-[#64748b]">
+                {ytStats?.channel?.subscribers?.toLocaleString() ?? "–"} suscriptores
+              </span>
               <span className="text-[#1e2130]">·</span>
-              <span className="flex items-center gap-1 text-xs text-[#10b981]">
-                <StatusDot active /> En crecimiento
+              <span className="text-xs text-[#64748b]">
+                {ytStats?.channel?.total_views?.toLocaleString() ?? "–"} vistas
               </span>
             </div>
+            {statsUpdatedAt && (
+              <p className="text-[9px] text-[#64748b] mt-1">
+                Actualizado {relativeTime(new Date(statsUpdatedAt))}
+              </p>
+            )}
           </div>
           <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#10b981]/15 text-[#34d399] border border-[#10b981]/20">
             <StatusDot active /> Activo
