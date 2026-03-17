@@ -11,13 +11,24 @@ import {
 import AgentAvatar from "../AgentAvatar";
 
 const PIPELINE_STEPS = [
-  { name: "Tendencias", emoji: "📈" },
-  { name: "Guión", emoji: "✍️" },
-  { name: "Voz", emoji: "🎙️" },
-  { name: "Imágenes", emoji: "🖼️" },
-  { name: "Video", emoji: "🎬" },
-  { name: "YouTube", emoji: "▶️" },
+  { name: "Tendencias", icon: "1" },
+  { name: "Guión", icon: "2" },
+  { name: "Voz", icon: "3" },
+  { name: "Imágenes", icon: "4" },
+  { name: "Video", icon: "5" },
+  { name: "YouTube", icon: "6" },
 ];
+
+function relativeTime(date: Date): string {
+  const diff = Date.now() - date.getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "ahora";
+  if (mins < 60) return `hace ${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `hace ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `hace ${days}d`;
+}
 
 function Countdown({ targetDate }: { targetDate: string }) {
   const [text, setText] = useState("");
@@ -38,8 +49,34 @@ function Countdown({ targetDate }: { targetDate: string }) {
     return () => clearInterval(iv);
   }, [targetDate]);
 
-  return <span className="font-mono text-[#f59e0b]">{text}</span>;
+  return <span className="font-mono text-[#f59e0b] text-xs">{text}</span>;
 }
+
+function Skeleton({ className = "" }: { className?: string }) {
+  return <div className={`animate-shimmer rounded-lg ${className}`} />;
+}
+
+function StatusDot({ active }: { active: boolean }) {
+  return (
+    <span className="relative flex h-2 w-2">
+      {active && (
+        <span className="absolute inline-flex h-full w-full rounded-full bg-[#10b981] animate-status-pulse" />
+      )}
+      <span
+        className={`relative inline-flex rounded-full h-2 w-2 ${
+          active ? "bg-[#10b981]" : "bg-[#64748b]"
+        }`}
+      />
+    </span>
+  );
+}
+
+const TYPE_LABEL: Record<string, string> = {
+  working: "trabajando",
+  completed: "completado",
+  error: "error",
+  idle: "en espera",
+};
 
 export default function YouTubeTab() {
   const { events } = useAgentFeed(4000, 50);
@@ -62,7 +99,6 @@ export default function YouTubeTab() {
       );
       setPipelineTask(mentesTask || null);
 
-      // Merge and sort events
       const merged = [...mickeyEvts, ...codyEvts].sort(
         (a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -73,7 +109,6 @@ export default function YouTubeTab() {
     load();
   }, []);
 
-  // Real-time channel events from feed
   const liveChannelEvents = events.filter(
     (e) => e.agent === "Mickey" || e.agent === "Cody"
   );
@@ -90,151 +125,146 @@ export default function YouTubeTab() {
       Date.now() - e.timestamp.getTime() < 5 * 60 * 1000
   );
 
-  const mickeyStatus = mickeyActive ? "ACTIVO" : "EN ESPERA";
-  const codyStatus = codyActive ? "ACTIVO" : "EN ESPERA";
+  if (loading) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-4 md:py-6 space-y-4">
+        <Skeleton className="h-24 w-full" />
+        <Skeleton className="h-20 w-full" />
+        <Skeleton className="h-16 w-full" />
+        <Skeleton className="h-32 w-full" />
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6 space-y-5">
+    <div className="max-w-2xl mx-auto px-4 py-4 md:py-6 space-y-4">
       {/* Channel Header */}
-      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-5">
+      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-3 md:p-5 card-glow">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold tracking-tight text-[#f8fafc]">
+            <h1 className="text-lg md:text-xl font-bold tracking-tight text-[#f8fafc]">
               Mentes Ocultas
             </h1>
-            <div className="flex items-center gap-3 mt-2 flex-wrap">
+            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
               <span className="text-xs text-[#64748b]">3 videos</span>
               <span className="text-[#1e2130]">·</span>
               <span className="text-xs text-[#64748b]">0 suscriptores</span>
               <span className="text-[#1e2130]">·</span>
-              <span className="text-xs text-[#10b981]">En crecimiento</span>
+              <span className="flex items-center gap-1 text-xs text-[#10b981]">
+                <StatusDot active /> En crecimiento
+              </span>
             </div>
           </div>
-          <span className="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-[#10b981]/15 text-[#34d399] border border-[#10b981]/20">
-            Activo
+          <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-[#10b981]/15 text-[#34d399] border border-[#10b981]/20">
+            <StatusDot active /> Activo
           </span>
         </div>
         <a
           href="https://www.youtube.com/@MentesOcultas44"
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-1.5 mt-4 px-4 py-2 rounded-lg bg-[#ef4444]/10 text-[#ef4444] text-sm font-medium border border-[#ef4444]/20 hover:bg-[#ef4444]/20 transition-colors"
+          className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-lg bg-[#ef4444]/10 text-[#ef4444] text-xs font-medium border border-[#ef4444]/20 hover:bg-[#ef4444]/20 transition-colors"
         >
           Abrir canal
         </a>
       </div>
 
-      {/* Agentes de este canal */}
-      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-5">
-        <h2 className="text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
+      {/* Agentes del canal */}
+      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-3 md:p-5 card-glow">
+        <h2 className="text-xs uppercase tracking-widest text-[#64748b] font-medium mb-2.5">
           Agentes del canal
         </h2>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2">
-            <div className="flex items-center gap-3">
-              <AgentAvatar name="Mickey" size={48} active={mickeyActive} />
-              <div>
-                <p className="text-sm font-medium text-[#f8fafc]">Mickey</p>
-                <p className="text-xs text-[#64748b]">Orquestador</p>
+        <div className="space-y-2">
+          {[
+            { name: "Mickey", role: "Orquestador", active: mickeyActive },
+            { name: "Cody", role: "Generación de código", active: codyActive },
+          ].map((agent) => (
+            <div key={agent.name} className="flex items-center justify-between py-1.5">
+              <div className="flex items-center gap-2.5">
+                <div className="relative">
+                  <AgentAvatar name={agent.name} size={40} active={agent.active} />
+                  <div className="absolute -bottom-0.5 -right-0.5">
+                    <StatusDot active={agent.active} />
+                  </div>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-[#f8fafc]">{agent.name}</p>
+                  <p className="text-[10px] text-[#64748b]">{agent.role}</p>
+                </div>
               </div>
+              <span
+                className={`px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase ${
+                  agent.active
+                    ? "bg-[#10b981]/15 text-[#34d399]"
+                    : "bg-[#1e2130] text-[#64748b]"
+                }`}
+              >
+                {agent.active ? "Activo" : "En espera"}
+              </span>
             </div>
-            <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                mickeyStatus === "ACTIVO"
-                  ? "bg-[#10b981]/15 text-[#34d399]"
-                  : "bg-[#1e2130] text-[#64748b]"
-              }`}
-            >
-              {mickeyStatus}
-            </span>
-          </div>
-          <div className="flex items-center justify-between py-2 border-t border-[#1e2130]">
-            <div className="flex items-center gap-3">
-              <AgentAvatar name="Cody" size={48} active={codyActive} />
-              <div>
-                <p className="text-sm font-medium text-[#f8fafc]">Cody</p>
-                <p className="text-xs text-[#64748b]">Generación de código</p>
-              </div>
-            </div>
-            <span
-              className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                codyStatus === "ACTIVO"
-                  ? "bg-[#10b981]/15 text-[#34d399]"
-                  : "bg-[#1e2130] text-[#64748b]"
-              }`}
-            >
-              {codyStatus}
-            </span>
-          </div>
+          ))}
         </div>
       </div>
 
       {/* Videos publicados */}
-      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-5">
-        <h2 className="text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
+      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-3 md:p-5 card-glow">
+        <h2 className="text-xs uppercase tracking-widest text-[#64748b] font-medium mb-2.5">
           Videos publicados
         </h2>
-        <div className="space-y-3">
-          <div className="p-3 rounded-lg bg-[#08090e] border border-[#1e2130]">
-            <p className="text-sm text-[#f8fafc] leading-snug">
-              ¿Puedo Leer Tu Mente? La Psicología Secreta Detrás de Tus
-              Pensamientos Más Ocultos
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#10b981]/15 text-[#34d399]">
-                Publicado
-              </span>
-              <span className="text-[10px] text-[#64748b]">Ver video</span>
-            </div>
+        <div className="p-2.5 rounded-lg bg-[#08090e] border border-[#1e2130]">
+          <p className="text-xs text-[#f8fafc] leading-snug">
+            ¿Puedo Leer Tu Mente? La Psicología Secreta Detrás de Tus
+            Pensamientos Más Ocultos
+          </p>
+          <div className="flex items-center gap-2 mt-1.5">
+            <span className="flex items-center gap-1 text-[9px] px-1.5 py-0.5 rounded-full bg-[#10b981]/15 text-[#34d399]">
+              <StatusDot active /> Publicado
+            </span>
           </div>
         </div>
       </div>
 
       {/* Pipeline programado */}
-      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-5">
-        <h2 className="text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
+      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-3 md:p-5 card-glow">
+        <h2 className="text-xs uppercase tracking-widest text-[#64748b] font-medium mb-2.5">
           Pipeline programado
         </h2>
 
         {pipelineTask ? (
-          <>
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm text-[#f8fafc]">
-                Próximo:{" "}
-                {new Date(pipelineTask.next_run).toLocaleDateString("es-CL", {
-                  weekday: "short",
-                  day: "numeric",
-                  month: "short",
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  timeZone: "America/Santiago",
-                })}
-              </span>
-              <Countdown targetDate={pipelineTask.next_run} />
-            </div>
-          </>
-        ) : loading ? (
-          <div className="text-sm text-[#64748b] mb-4">Cargando...</div>
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs text-[#f8fafc]">
+              Próximo:{" "}
+              {new Date(pipelineTask.next_run).toLocaleDateString("es-CL", {
+                weekday: "short",
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+                timeZone: "America/Santiago",
+              })}
+            </span>
+            <Countdown targetDate={pipelineTask.next_run} />
+          </div>
         ) : (
-          <div className="text-sm text-[#64748b] mb-4">
+          <div className="text-xs text-[#64748b] mb-3">
             Sin pipeline programado
           </div>
         )}
 
-        {/* Pipeline steps visual */}
-        <div className="flex items-center gap-1 overflow-x-auto pb-2">
+        {/* Pipeline steps */}
+        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar pb-1">
           {PIPELINE_STEPS.map((step, i) => (
             <div key={step.name} className="flex items-center">
-              <div className="flex flex-col items-center gap-1 min-w-[56px]">
-                <div className="w-9 h-9 rounded-lg bg-[#08090e] border border-[#1e2130] flex items-center justify-center text-base">
-                  {step.emoji}
+              <div className="flex flex-col items-center gap-0.5 min-w-[48px]">
+                <div className="w-8 h-8 rounded-lg bg-[#08090e] border border-[#1e2130] flex items-center justify-center text-[10px] font-bold text-[#7c3aed]">
+                  {step.icon}
                 </div>
-                <span className="text-[9px] text-[#64748b] text-center leading-tight">
+                <span className="text-[8px] text-[#64748b] text-center leading-tight">
                   {step.name}
                 </span>
               </div>
               {i < PIPELINE_STEPS.length - 1 && (
-                <div className="w-3 h-px bg-[#1e2130] mx-0.5 mt-[-12px]" />
+                <div className="w-2.5 h-px bg-[#1e2130] mx-0.5 mt-[-10px]" />
               )}
             </div>
           ))}
@@ -242,42 +272,36 @@ export default function YouTubeTab() {
       </div>
 
       {/* Actividad del canal */}
-      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-5">
-        <h2 className="text-xs uppercase tracking-widest text-[#64748b] font-medium mb-3">
+      <div className="bg-[#0f1117] border border-[#1e2130] rounded-xl p-3 md:p-5 card-glow">
+        <h2 className="text-xs uppercase tracking-widest text-[#64748b] font-medium mb-2.5">
           Actividad del canal
         </h2>
 
-        {channelEvents.length === 0 && !loading ? (
-          <div className="text-sm text-[#64748b]">Sin actividad</div>
-        ) : loading ? (
-          <div className="text-sm text-[#64748b]">Cargando...</div>
+        {channelEvents.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-4 text-center">
+            <AgentAvatar name="Mickey" size={28} />
+            <p className="text-xs text-[#64748b] mt-1.5">Sin actividad</p>
+          </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {channelEvents.map((ev) => (
               <div
                 key={ev.id}
-                className="flex items-start gap-3 py-2 border-b border-[#1e2130] last:border-0"
+                className="flex items-center gap-2 py-1.5"
               >
-                <AgentAvatar name={ev.agent} size={32} active={ev.event_type === "working"} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[#f8fafc] truncate">
-                    {ev.message}
-                  </p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-[#64748b]">{ev.agent}</span>
-                    <span
-                      className={`text-xs ${TYPE_COLORS[ev.event_type] || "text-[#64748b]"}`}
-                    >
-                      {ev.event_type}
-                    </span>
-                  </div>
-                </div>
-                <span className="text-[10px] font-mono text-[#64748b] whitespace-nowrap">
-                  {new Date(ev.created_at).toLocaleTimeString("es-CL", {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    timeZone: "America/Santiago",
-                  })}
+                <AgentAvatar
+                  name={ev.agent}
+                  size={24}
+                  active={ev.event_type === "working"}
+                />
+                <span className="text-[10px] font-medium text-[#a78bfa] shrink-0">
+                  {ev.agent}
+                </span>
+                <p className="text-[11px] text-[#f8fafc] truncate flex-1 min-w-0">
+                  {ev.message}
+                </p>
+                <span className="text-[9px] font-mono text-[#64748b] whitespace-nowrap shrink-0">
+                  {relativeTime(new Date(ev.created_at))}
                 </span>
               </div>
             ))}
